@@ -1,0 +1,163 @@
+%% Example CV - Wilson DC. Chiquito
+%% Comprehensive overview of all competencies, experience, and achievements.
+%% Use as a master reference when tailoring role-specific CVs.
+%%
+%% Compile with: lualatex main_example.tex
+%% (pdflatex often fails on modern MiKTeX with fontawesome5 font-expansion errors.)
+
+\documentclass[11pt,a4paper,sans]{moderncv}
+\moderncvstyle{banking}
+\moderncvcolor{blue}
+
+% Force both first and last name AND section headings to render in moderncv
+% blue (color1). Default banking on lualatex+MiKTeX leaves these black, which
+% looks inconsistent with the rest of the blue accent scheme.
+\renewcommand*{\firstnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
+\renewcommand*{\lastnamestyle}[1]{{\fontsize{34}{36}\bfseries\upshape\color{color1}#1}}
+\renewcommand*{\sectionstyle}[1]{{\sectionfont\color{color1}#1}}
+
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=blue,
+    pdftitle={Wilson DC. Chiquito - CV},
+    pdfpagemode=FullScreen,
+}
+\usepackage[scale=0.80]{geometry}
+\usepackage{import}
+
+% personal data
+\name{Wilson}{Chiquito}
+\address{Muzon, San Jose del Monte, Bulacan, Philippines}{}{}
+\phone[mobile]{+63 976 044 9125}
+\email{wlsnchqt@gmail.com}
+\extrainfo{\href{https://github.com/Shimagure}{GitHub}, \href{https://wilson-chiquito-portfolio.vercel.app/}{Portfolio}}
+
+\begin{document}
+
+\makecvtitle
+
+% ============================================================
+%     PROFILE STATEMENT
+% ============================================================
+
+\vspace{6pt}
+\small{End User Computing Technician with 3+ years of enterprise IT support experience at Solaire Resort \& Casino, resolving 20-30 Tier 2 tickets daily across desktops, laptops, printers, and mobile devices. Skilled in Microsoft 365, Active Directory, Windows 10/11, and endpoint management, with a proven record of raising first-contact resolution and documenting solutions for the knowledge base.}
+
+% ============================================================
+%     CORE COMPETENCIES
+% ============================================================
+
+\section{Core Competencies}
+\vspace{1pt}
+\begin{itemize}
+
+\item \textbf{IT Support \& Administration}: Microsoft 365, Active Directory, Windows 10/11, Windows Server, Group Policy, Endpoint Management, ITSM, Remote Support (RDP, TeamViewer, AnyDesk)
+
+\item \textbf{Troubleshooting}: Hardware diagnostics, software installation \& configuration, network connectivity, printer \& mobile device support, escalated incident resolution
+
+\item \textbf{Scripting \& Automation}: PowerShell, Python, Linux System Administration, HTML/CSS/JavaScript
+
+\item \textbf{Networking \& Security}: Network troubleshooting, CrowdStrike, Cisco networking basics, cybersecurity awareness
+
+\item \textbf{Desktop Deployment}: Workstation imaging, enterprise application installation, knowledge base documentation
+
+\end{itemize}
+
+% ============================================================
+%     PROFESSIONAL EXPERIENCE
+% ============================================================
+
+\section{Professional Experience}
+\vspace{3pt}
+\begin{itemize}
+
+% --- Most Recent Role ---
+\item{\cventry{July 2023 - May 2026}{End User Computing Technician}{Solaire Resort \& Casino}{Metro Manila, Philippines}{}{\vspace{1pt}
+\begin{itemize}
+    \item Provided Tier 2 technical support for desktops, laptops, printers, and mobile devices across a large enterprise environment, resolving an average of 20-30 support tickets daily
+    \item Developed an internal security tool to assess CrowdStrike status on every end-user device connected to the network, reducing manual checks across 800-1,000+ devices
+    \item Managed Active Directory users, security groups, organizational units, permissions, and password resets, maintaining accurate access controls and reducing account-related tickets
+    \item Troubleshot complex hardware, software, Windows OS, and network connectivity issues using systematic diagnostics to improve first-contact resolution
+    \item Deployed and imaged workstations, installed enterprise applications, and supported escalated incidents while documenting solutions for knowledge base improvement
+\end{itemize}}}
+
+\vspace{3pt}
+
+% --- Web Design & Networking Trainee ---
+\item{\cventry{January 2022 - December 2022}{Web Design \& Networking Trainee}{Bulacan State Agricultural University}{Bulacan, Philippines}{}{\vspace{1pt}
+\begin{itemize}
+    \item Assisted in website development and maintenance, computer hardware diagnostics, OS installation, and basic network support for university labs and staff
+    \item Supported day-to-day IT operations including software troubleshooting and lab workstation readiness for academic use
+\end{itemize}}}
+
+\vspace{3pt}
+
+% --- Programmer / Researcher ---
+\item{\cventry{June 2021 - December 2022}{Programmer / Researcher}{Bulacan State Agricultural University}{Bulacan, Philippines}{}{\vspace{1pt}
+\begin{itemize}
+    \item Developed, tested, and documented modules for an academic e-commerce system; contributed to requirements gathering, coding, unit testing, and technical documentation
+\end{itemize}}}
+
+\vspace{3pt}
+
+% --- Freelance Computer Technician ---
+\item{\cventry{June 2018 - May 2020}{Freelance Computer Technician}{San Ildefonso National High School}{Bulacan, Philippines}{}{\vspace{1pt}
+\begin{itemize}
+    \item Repaired and maintained school computer laboratory systems, performed Windows OS installations/upgrades, and resolved hardware/software issues for faculty and students through regular preventive maintenance
+\end{itemize}}}
+
+\end{itemize}
+
+% ============================================================
+%     EDUCATION
+% ============================================================
+
+\section{Education}
+\vspace{1pt}
+\begin{itemize}
+
+\item{\cventry{2018-2022}{BS in Information Technology}{Bulacan State Agricultural University}{Bulacan, Philippines}{}{\vspace{1pt}
+Key topics: IT support, web design, programming, and networking.
+}}
+
+\end{itemize}
+
+% ============================================================
+%     CERTIFICATIONS
+% ============================================================
+
+\section{Certifications}
+\vspace{1pt}
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\setlength{\parsep}{0pt}
+
+\item Linux System Administration — completed 2024
+\item Fortinet NSE 3 — completed 2023
+\item Fortinet Cybersecurity Fundamentals — completed 2023
+\item Cisco Networking Basics — completed 2023
+\item Introduction to Cybersecurity (Cisco) — completed 2023
+
+\end{itemize}
+
+% ============================================================
+%     PROJECTS
+% ============================================================
+
+\section{Projects}
+\vspace{1pt}
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\setlength{\parsep}{0pt}
+
+\item \textbf{CrowdStrike Fleet Status Scanner (PowerShell)} — Automated Falcon sensor status checks across 800-1,000+ endpoints, replacing manual inventory at Solaire Resort \& Casino
+\item \textbf{Academic E-Commerce System} — Developed, tested, and documented modules; requirements gathering, coding, unit testing, technical documentation (BSIT capstone)
+\item \textbf{Personal Portfolio} (wilson-chiquito-portfolio.vercel.app) — Showcases IT support and web development skills; HTML/CSS/JavaScript, deployed on Vercel
+
+\end{itemize}
+
+\end{document}

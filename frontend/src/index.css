@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   CareerPilot — Vision-UI-inspired dark design system
+   Deep navy canvas · violet primary · translucent glass cards · glow accents
+------------------------------------------------------------------- */
+
+:root {
+  color-scheme: dark;
+
+  --bg-0: #060912;
+  --bg-1: #0a0f1e;
+  --bg-2: #121829;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-strong: rgba(255, 255, 255, 0.06);
+  --card-hover: rgba(255, 255, 255, 0.08);
+  --stroke: rgba(255, 255, 255, 0.08);
+  --stroke-strong: rgba(255, 255, 255, 0.14);
+
+  --text-h: #f6f7fb;
+  --text: #c0c6d4;
+  --text-muted: #8b93a7;
+  --text-faint: #5d6579;
+
+  --brand: #7551ff;
+  --brand-bright: #8a5fff;
+  --cyan: #49a3f1;
+  --pink: #f8618c;
+
+  --ring: rgba(117, 81, 255, 0.55);
+
+  --card-radius: 1.1rem;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -12px rgba(117, 81, 255, 0.14);
+
+  font: 15px/1.5 system-ui, 'Segoe UI', 'Inter', Roboto, sans-serif;
+  letter-spacing: 0.15px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ambient brand orbs on the canvas */
+html {
+  background: var(--bg-1);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background-color: var(--bg-1);
+  background-image:
+    radial-gradient(1100px 520px at 12% -8%, rgba(117, 81, 255, 0.22), transparent 60%),
+    radial-gradient(900px 460px at 96% -14%, rgba(73, 163, 241, 0.16), transparent 55%),
+    radial-gradient(800px 600px at 50% 118%, rgba(248, 97, 140, 0.09), transparent 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display, system-ui, 'Segoe UI', 'Inter', sans-serif);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-h);
+}
+
+code, pre {
+  font-family: var(--font-mono, ui-monospace, 'SFMono-Regular', Consolas, monospace);
+}
+
+::selection {
+  background: rgba(117, 81, 255, 0.35);
+  color: #fff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(117, 81, 255, 0.5);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+@layer components {
+  /* --- Glass surfaces ------------------------------------------------- */
+  .glass-card {
+    @apply relative rounded-2xl border border-white/[0.07] bg-white/[0.04] shadow-card backdrop-blur-md transition-[border-color,box-shadow,background] duration-200;
+  }
+  .glass-card-hover {
+    @apply hover:border-white/[0.14] hover:bg-white/[0.06] hover:shadow-card-hover;
+  }
+  .glass-strong {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.07] backdrop-blur-xl shadow-card;
+  }
+
+  /* Soft tinted accent surfaces (metrics / hero panels) */
+  .panel-brand { @apply bg-brand-600/[0.14] border-brand-500/[0.25]; }
+  .panel-cyan  { @apply bg-cyan-500/[0.12] border-cyan-500/[0.22]; }
+  .panel-pink  { @apply bg-pink-500/[0.12] border-pink-500/[0.22]; }
+  .panel-green { @apply bg-emerald-500/[0.10] border-emerald-500/[0.22]; }
+  .panel-amber { @apply bg-amber-500/[0.10] border-amber-500/[0.22]; }
+
+  /* --- Buttons ---------------------------------------------------------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none whitespace-nowrap;
+  }
+  .btn-primary {
+    @apply btn text-white bg-[linear-gradient(135deg,#7551ff_0%,#a855f7_100%)] shadow-glow-brand hover:brightness-110 active:brightness-95;
+  }
+  .btn-secondary {
+    @apply btn text-slate-200 bg-white/[0.06] border border-white/[0.1] hover:bg-white/[0.12];
+  }
+  .btn-ghost {
+    @apply btn text-slate-300 hover:bg-white/[0.08] hover:text-white;
+  }
+  .btn-outline {
+    @apply btn text-brand-300 border border-brand-500/40 bg-brand-500/[0.08] hover:bg-brand-500/[0.18] hover:text-white;
+  }
+  .btn-cyan {
+    @apply btn text-white bg-[linear-gradient(135deg,#49a3f1_0%,#6ec8ff_100%)] shadow-glow-cyan hover:brightness-110;
+  }
+  .btn-pink {
+    @apply btn text-white bg-[linear-gradient(135deg,#f8618c_0%,#ff80b4_100%)] shadow-glow-pink hover:brightness-110;
+  }
+
+  /* --- Inputs ----------------------------------------------------------- */
+  .input {
+    @apply w-full rounded-xl border border-white/[0.1] bg-white/[0.05] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-500/60 focus:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors;
+  }
+  .select {
+    @apply input appearance-none pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400;
+  }
+
+  /* --- Badges / pills ---------------------------------------------------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .badge-remote      { @apply badge text-emerald-300 bg-emerald-500/[0.14] border border-emerald-500/[0.28]; }
+  .badge-hybrid      { @apply badge text-cyan-300 bg-cyan-500/[0.14] border border-cyan-500/[0.28]; }
+  .badge-onsite      { @apply badge text-amber-300 bg-amber-500/[0.14] border border-amber-500/[0.28]; }
+  .badge-unspecified { @apply badge text-slate-400 bg-slate-400/[0.12] border border-slate-400/[0.2]; }
+
+  .badge-active-verified     { @apply badge text-emerald-300 bg-emerald-500/[0.14] border border-emerald-500/[0.3]; }
+  .badge-active-unverified   { @apply badge text-amber-300 bg-amber-500/[0.14] border border-amber-500/[0.3]; }
+  .badge-stale               { @apply badge text-slate-400 bg-slate-400/[0.12] border border-slate-400/[0.22]; }
+  .badge-changed             { @apply badge text-cyan-300 bg-cyan-500/[0.14] border border-cyan-500/[0.3]; }
+  .badge-closed              { @apply badge text-red-300 bg-red-500/[0.14] border border-red-500/[0.3]; }
+  .badge-new                 { @apply badge text-brand-300 bg-brand-500/[0.14] border border-brand-500/[0.3]; }
+  .badge-needs-verification  { @apply badge text-violet-300 bg-violet-500/[0.14] border border-violet-500/[0.3]; }
+  .badge-deprioritize        { @apply badge text-slate-400 bg-slate-400/[0.12] border border-slate-400/[0.22]; }
+
+  .badge-high   { @apply badge text-emerald-300 bg-emerald-500/[0.14] border border-emerald-500/[0.3]; }
+  .badge-medium { @apply badge text-amber-300 bg-amber-500/[0.14] border border-amber-500/[0.3]; }
+  .badge-low    { @apply badge text-red-300 bg-red-500/[0.14] border border-red-500/[0.3]; }
+  .badge-unknown { @apply badge text-slate-400 bg-slate-400/[0.12] border border-slate-400/[0.22]; }
+
+  /* Application status pills */
+  .status-draft         { @apply badge text-slate-300 bg-white/[0.06] border border-white/[0.1]; }
+  .status-submitted     { @apply badge text-cyan-300 bg-cyan-500/[0.14] border border-cyan-500/[0.3]; }
+  .status-under_review  { @apply badge text-violet-300 bg-violet-500/[0.14] border border-violet-500/[0.3]; }
+  .status-interview     { @apply badge text-brand-300 bg-brand-500/[0.14] border border-brand-500/[0.3]; }
+  .status-offer         { @apply badge text-emerald-300 bg-emerald-500/[0.14] border border-emerald-500/[0.3]; }
+  .status-rejected      { @apply badge text-red-300 bg-red-500/[0.14] border border-red-500/[0.3]; }
+  .status-withdrawn     { @apply badge text-slate-400 bg-slate-400/[0.12] border border-slate-400/[0.22]; }
+  .status-accepted      { @apply badge text-emerald-200 bg-emerald-500/[0.2] border border-emerald-400/[0.4]; }
+
+  /* --- Tables ------------------------------------------------------------ */
+  .table-vision {
+    @apply w-full text-left text-sm text-slate-300;
+  }
+  .table-vision thead th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-white/[0.08];
+  }
+  .table-vision tbody tr {
+    @apply border-b border-white/[0.05] transition-colors hover:bg-white/[0.035];
+  }
+  .table-vision tbody td {
+    @apply px-4 py-3 align-middle;
+  }
+
+  /* --- Score / progress truth lines -------------------------------------- */
+  .score-ring {
+    @apply relative inline-flex shrink-0 items-center justify-center;
+  }
+  .progress-track {
+    @apply h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08];
+  }
+  .progress-fill {
+    @apply block h-full rounded-full transition-all duration-500;
+  }
+
+  /* --- Link -------------------------------------------------------------- */
+  .link-brand {
+    @apply inline-flex items-center gap-1 text-sm font-semibold text-brand-400 transition-colors hover:text-brand-300;
+  }
+
+  /* --- Page heading -------------------------------------------------------- */
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight text-slate-50 sm:text-[1.7rem];
+  }
+  .page-subtitle {
+    @apply mt-1 max-w-2xl text-sm text-slate-400;
+  }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    background: linear-gradient(120deg, #a855f7 0%, #7551ff 45%, #49a3f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
