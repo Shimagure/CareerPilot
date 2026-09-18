@@ -731,7 +731,7 @@ export default function SearchPage() {
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as SortOrder)}
                   aria-label="Sort results"
-                  className="text-xs px-2 py-1 rounded-lg border border-zinc-200 bg-white text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-300"
+                  className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-amber-300"
                 >
                   <option value="newest">Newest</option>
                   <option value="fit">Best Fit</option>
