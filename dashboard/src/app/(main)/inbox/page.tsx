@@ -204,7 +204,7 @@ export default function InboxPage() {
           <div className="h-3 w-40 bg-zinc-100 rounded" />
         </div>
         <div className="flex flex-1">
-          <div className="w-[420px] border-r border-zinc-200 p-3 space-y-2">
+          <div className="w-full md:w-[420px] flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 p-3 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-16 bg-zinc-100 rounded-lg" />
             ))}
