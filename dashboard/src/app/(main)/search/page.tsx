@@ -486,7 +486,8 @@ export default function SearchPage() {
       </div>
 
       {/* Tab nav */}
-      <div className="flex items-center gap-0 border-b border-zinc-200 dark:border-zinc-700">
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-0 border-b border-zinc-200 dark:border-zinc-700 min-w-max">
         <button type="button" onClick={() => setActiveTab("search")}
           className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === "search" ? "border-amber-500 text-amber-700 dark:text-amber-400" : "border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
         >
@@ -513,6 +514,7 @@ export default function SearchPage() {
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700">{queueCounts.pending}</span>
           )}
         </button>
+        </div>
       </div>
 
       {activeTab === "suggestions" && (
