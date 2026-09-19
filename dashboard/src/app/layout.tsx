@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/auth-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,9 +37,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-zinc-50">
         <TooltipProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          {children}
         </TooltipProvider>
         <Toaster position="top-center" richColors closeButton />
       </body>

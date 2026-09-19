@@ -239,7 +239,72 @@ tests/                          pytest suite
 - **API keys** live in `.env` and are gitignored.
 - **Local LLM fallback.** Set the local endpoint variables in `.env` to keep bulk embedding or chat calls on your own hardware.
 
-<!-- Screenshots: TODO -->
+## Dashboard
+
+The CareerPilot dashboard is a Next.js web frontend that provides a visual interface to the job-search pipeline. A static, recruiter-facing **demo** is available at `/demo` with fictional data, fully isolated from production authentication, Supabase, and real user data.
+
+### Demo
+
+The `/demo` route is a self-contained demonstration that renders **static, hardcoded data** (see `dashboard/src/lib/demo-data.ts`) — no Supabase connection, no OAuth login, and no external API calls. All company names, contacts, jobs, and applications are fictional. The demo is intended for portfolio review and recruiter presentations.
+
+> The search page itself notes: "Demo mode — showing fictional search results."
+
+### Screenshots
+
+![Desktop Overview](dashboard/docs/screenshots/demo-overview-desktop.png)
+
+![Desktop Search](dashboard/docs/screenshots/demo-search-desktop.png)
+
+![Desktop Applications](dashboard/docs/screenshots/demo-applications-desktop.png)
+
+![Mobile Overview](dashboard/docs/screenshots/demo-overview-mobile.png)
+
+### Capabilities visible in the demo
+
+| Capability | Description |
+|---|---|
+| Dashboard overview & KPIs | Aggregate cards for total tracked, active pipeline, response rate, and applications this week; plus a nine-stage status breakdown |
+| Weekly activity chart | Area chart (Recharts) showing application activity over the last 7 days with per-source breakdown |
+| Job search | Client-side search results with filtering (status, profile, query), sorting (newest, fit, salary, company), rules-based fit scoring, and profile chips |
+| Application tracking | Nine-stage pipeline (found → interested → applied → phone_screen → interview → offer / rejected / withdrawn / ghosted) with search, sort, and status filtering |
+| Attention alerts | Stale-application detection, overdue follow-ups, upcoming interviews, and new job matches |
+| Skill-gap recommendations | Top skills to study, derived from tracked application requirements |
+| Auto-apply pipeline | Queue status, daily budget tracking, and recent activity |
+| Recent activity feed | Chronological log of application events (status changes, notes, offers) |
+| Responsive layout | Collapsing sidebar on mobile, drawer navigation, and adaptive grid layouts |
+| Dark dashboard theme | Admin-dark presentation with amber accents |
+
+### Architecture / isolation
+
+The demo path (`/demo`) is intentionally disconnected from the production data layer:
+
+- **Production path** — Authenticated routes use Supabase SSR for session management, real-time data, and user-scoped persistence. OAuth tokens and API keys are required.
+- **Demo path** — Server-rendered with static TypeScript data. No auth provider, no Supabase client, no external API calls. The `/demo` layout (`dashboard/src/app/demo/layout.tsx`) wraps pages in `DemoAppShell` and `DemoSidebar` components that bypass the production `AuthProvider`.
+
+### Running locally
+
+The dashboard is a standard Next.js application.
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The `/demo` routes work immediately without any environment configuration.
+
+For production routes (non-demo), copy `.env.example` to `.env.local` and fill in Supabase and API credentials. The demo does **not** require these credentials.
+
+### Portfolio / recruiter notes
+
+This dashboard demonstrates:
+
+- **Next.js App Router** with TypeScript, React Server Components, and server-side rendering
+- **Component-driven architecture** using shadcn/ui patterns and Tailwind CSS v4
+- **Data-driven UI** with Recharts visualizations and client-side filtering/sorting
+- **Responsive design** with adaptive sidebar and mobile-first breakpoints
+- **Separation of concerns**: static demo data is fully isolated from production Supabase/auth paths
+- **Integration surface**: the dashboard shares Supabase tables and Google Calendar APIs with the broader CareerPilot CLI pipeline
 
 ## Credential rotation
 
