@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
+from unittest.mock import patch
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
@@ -82,9 +83,28 @@ FORBIDDEN_MARKERS = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Fixtures (reused pattern from test_security_boundary.py)
-# ---------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def mock_now():
+    """Mock datetime.now to a fixed date in 2026 (September 1st, 2026)."""
+    from datetime import datetime as real_datetime
+    fixed_now = real_datetime(2026, 9, 1, tzinfo=timezone.utc)
+
+    # Mock datetime.now in the demo_store module
+    with patch("app.demo_store.datetime") as mock_demo_datetime:
+        mock_demo_datetime.now.return_value = fixed_now
+        mock_demo_datetime.fromisoformat.side_effect = real_datetime.fromisoformat
+
+        # Patch datetime in the test module itself
+        with patch("tests.test_demo_data.datetime") as mock_test_datetime:
+            mock_test_datetime.now.return_value = fixed_now
+            mock_test_datetime.fromisoformat.side_effect = real_datetime.fromisoformat
+
+            # Let's also patch datetime.datetime generally
+            with patch("datetime.datetime") as mock_datetime:
+                mock_datetime.now.return_value = fixed_now
+                mock_datetime.fromisoformat.side_effect = real_datetime.fromisoformat
+                yield mock_datetime
+
 @pytest_asyncio.fixture(scope="function")
 async def db_manager():
     """Create a test database manager with isolated SQLite."""
@@ -161,10 +181,11 @@ def _state_counts(seen) -> dict:
     return counts
 
 
-def _expected_active_stable_ids(seen, app_ids) -> set:
+def _expected_active_stable_ids(seen, app_ids, now=None) -> set:
     """Recompute the 28-day / application-protection active set from the files,
     independent of the server's own clock but following the same rule."""
-    now = datetime.now(timezone.utc)
+    if now is None:
+        now = datetime.now(timezone.utc)
     active = set()
     for rec in seen.values():
         if rec.get("processing_state") not in ACTIVE_POOL_STATES:
@@ -387,7 +408,13 @@ class TestPublicEndpointsExpandedCorpus:
 
         seen = _load_seen_jobs()
         app_ids = {a["stable_id"] for a in _load_apps()}
-        expected = _expected_active_stable_ids(seen, app_ids)
+
+        # Debug printing
+        print(f"DATETIME CLASS IN TEST: {datetime}")
+        print(f"DATETIME NOW IN TEST: {datetime.now()}")
+
+        fixed_now = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        expected = _expected_active_stable_ids(seen, app_ids, now=fixed_now)
 
         returned = {j["stable_id"] for j in data}
         assert returned == expected
