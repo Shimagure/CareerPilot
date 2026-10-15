@@ -56,34 +56,71 @@ The public demo is a **read-only, fictionalized showcase** deployed at `/demo/*`
 
 **API:** All public demo pages consume `/api/public/*` endpoints backed by `DemoDataStore`. These endpoints require **no authentication**.
 
+### Screenshot Showcase
+
+The following screenshots illustrate the public recruiter-facing demo views (`/demo/*` routes) powered by the fictional demo dataset:
+
+#### 1. Dashboard (`/demo/dashboard`)
+![CareerPilot Demo Dashboard](docs/screenshots/demo-dashboard.png)
+
+#### 2. Jobs (`/demo/jobs`)
+![CareerPilot Demo Jobs](docs/screenshots/demo-jobs.png)
+
+#### 3. Job Detail (`/demo/jobs/:stableId`)
+![CareerPilot Demo Job Detail](docs/screenshots/demo-job-detail.png)
+
+#### 4. Fit Analysis (`/demo/jobs/:stableId/fit`)
+![CareerPilot Demo Fit Analysis](docs/screenshots/demo-fit-analysis.png)
+
+#### 5. Ranked Jobs (`/demo/ranked`)
+![CareerPilot Demo Ranked Jobs](docs/screenshots/demo-ranked-jobs.png)
+
+#### 6. Applications (`/demo/applications`)
+![CareerPilot Demo Applications](docs/screenshots/demo-applications.png)
+
+#### 7. Pipeline (`/demo/pipeline`)
+![CareerPilot Demo Pipeline](docs/screenshots/demo-pipeline.png)
+
+#### 8. Retention (`/demo/retention`)
+![CareerPilot Demo Retention](docs/screenshots/demo-retention.png)
+
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        SAME-ORIGIN DEPLOYMENT                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   https://careerpilot.example.com                               │
-│            │                                                    │
-│            ▼                                                    │
-│   ┌─────────────────┐     ┌─────────────────────────────────┐  │
-│   │     nginx       │     │        FastAPI (single worker)   │  │
-│   │  (TLS + static) │────▶│      127.0.0.1:8000              │  │
-│   └─────────────────┘     └─────────────────────────────────┘  │
-│        │                                                    │     │
-│        │                                                    │     │
-│        ▼                                                    ▼     │
-│   frontend/dist/                                    ┌─────────────────┐
-│   (React 19 + Vite 8,                              │  Routers        │
-│    BrowserRouter, SPA)                             ├─────────────────┤
-│                                                    │ /api/public/*  │──▶ DemoDataStore (fictional)
-│   try_files $uri $uri/ /index.html                 │ /api/auth/*    │──▶ register/login/me (public)
-│                                                    │ /api/* (other) │──▶ JWT required (private)
-│   /api/* matched FIRST, never rewritten            └─────────────────┘
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         SAME-ORIGIN DEPLOYMENT                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                    https://careerpilot.example.com                           │
+│                                  │                                           │
+│                                  ▼                                           │
+│                         ┌──────────────────┐                                 │
+│                         │      nginx       │                                 │
+│                         │   TLS + static   │                                 │
+│                         └────────┬─────────┘                                 │
+│                                  │                                           │
+│                    ┌─────────────┴─────────────┐                             │
+│                    │                           │                             │
+│                    ▼                           ▼                             │
+│        ┌──────────────────────┐    ┌─────────────────────────────────────┐   │
+│        │    frontend/dist/    │    │     FastAPI · 127.0.0.1:8000        │   │
+│        │                      │    │       single worker                 │   │
+│        │ React 19 + Vite 8    │    └──────────────────┬──────────────────┘   │
+│        │ BrowserRouter · SPA  │                       │                      │
+│        │                      │                       ▼                      │
+│        │ try_files $uri       │             ┌───────────────────────────┐    │
+│        │ $uri/ /index.html    │             │          Routers          │    │
+│        └──────────────────────┘             ├───────────────────────────┤    │
+│                                             │ /api/public/* → DemoData  │────┼──▶ Fictional demo
+│                                             │ /api/auth/*   → Auth      │────┼──▶ Public auth
+│                                             │ /api/*        → Private   │────┼──▶ JWT required
+│                                             └───────────────────────────┘    │
+│                                                                              │
+│   nginx rule: /api/* is matched FIRST and is NEVER rewritten to index.html   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key architectural decisions:**
