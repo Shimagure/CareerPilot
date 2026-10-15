@@ -55,6 +55,9 @@ Claude classifies recruiter mail, drafts personalized replies into Gmail's draft
 - `filters nuke` — Remove all CareerPilot filters
 </details>
 
+### Admin Panel
+Administrative interface for managing job sources. Features RBAC-guarded views for job-source CRUD operations (`/admin/job-sources`) with authenticated API endpoints.
+
 ### Application pipeline
 Nine-stage pipeline (`found` → `interested` → `applied` → `phone_screen` → `interview` → `offer` / `rejected` / `withdrawn` / `ghosted`) with stale-app detection, analytics (response rate, avg days to response, status breakdown), and Gmail import — feed a message ID with a job-description attachment and CareerPilot extracts the role into a tracked application.
 
@@ -278,7 +281,7 @@ The `/demo` route is a self-contained demonstration that renders **static, hardc
 
 The demo path (`/demo`) is intentionally disconnected from the production data layer:
 
-- **Production path** — Authenticated routes use Supabase SSR for session management, real-time data, and user-scoped persistence. OAuth tokens and API keys are required.
+- **Production path** — Authenticated routes use Supabase SSR for session management, real-time data, and user-scoped persistence. OAuth tokens and API keys are required. Prep-Pack API routes (`/api/prep-pack`) strictly enforce Supabase server-side session authentication (returning HTTP 401 for unauthenticated requests).
 - **Demo path** — Server-rendered with static TypeScript data. No auth provider, no Supabase client, no external API calls. The `/demo` layout (`dashboard/src/app/demo/layout.tsx`) wraps pages in `DemoAppShell` and `DemoSidebar` components that bypass the production `AuthProvider`.
 
 ### Running locally
