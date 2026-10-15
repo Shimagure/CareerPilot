@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -11,6 +12,11 @@ from pathlib import Path
 from config import settings
 
 logger = logging.getLogger(__name__)
+
+# Role constants — CP16.2
+USER = "user"
+ADMIN = "admin"
+VALID_ROLES = {USER, ADMIN}
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS skills (
@@ -210,6 +216,23 @@ CREATE TABLE IF NOT EXISTS llm_budget_resets (
     last_reset_at TEXT NOT NULL DEFAULT (datetime('now')),
     fallback_count_since_reset INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS job_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    source_type TEXT NOT NULL DEFAULT 'job_board',
+    active INTEGER DEFAULT 1 CHECK(active IN (0, 1)),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 
@@ -366,6 +389,61 @@ def _backfill_interview_analyses(conn):
     logger.info("Backfilled %d interview_analyses rows into transcripts; legacy table dropped", len(rows))
 
 
+def _migrate_users_table(conn):
+    """Create users table and seed the existing account as ADMIN (CP16.2).
+
+    Creates the users table if it does not exist. Seeds the account
+    identified by CAREERPILOT_USER_ID as ADMIN with a name (from
+    CAREERPILOT_USER_NAME env var or default 'Admin') if it does not
+    already exist in the table. Safe to re-run — existing rows are
+    never overwritten.
+    """
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    """)
+    conn.commit()
+
+    user_id = settings.CAREERPILOT_USER_ID
+    if user_id and user_id != "00000000-0000-0000-0000-000000000000":
+        existing = conn.execute(
+            "SELECT id FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+        if existing is None:
+            name = os.environ.get("CAREERPILOT_USER_NAME", "Admin")
+            now = datetime.now().isoformat()
+            conn.execute(
+                "INSERT INTO users (id, name, role, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, name, ADMIN, now, now),
+            )
+            conn.commit()
+            logger.info("Seeded admin user id=%s name=%s", user_id, name)
+
+
+def _migrate_job_sources(conn):
+    """Create job_sources table if it does not exist (CP16.2).
+
+    Idempotent — no-op if the table already exists.
+    """
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS job_sources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            source_type TEXT NOT NULL DEFAULT 'job_board',
+            active INTEGER DEFAULT 1 CHECK(active IN (0, 1)),
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    """)
+    conn.commit()
+
+
 def get_connection(db_path: Path = None) -> sqlite3.Connection:
     """Get a SQLite connection, creating the database and schema if needed."""
     db_path = db_path or settings.DB_PATH
@@ -384,6 +462,8 @@ def get_connection(db_path: Path = None) -> sqlite3.Connection:
     _migrate_llm_calls(conn)
     _migrate_transcripts_kind(conn)
     _backfill_interview_analyses(conn)
+    _migrate_users_table(conn)
+    _migrate_job_sources(conn)
     migrate_recruiters_to_contacts(conn)
     migrate_applications_description(conn)
 
@@ -1060,3 +1140,126 @@ def get_skills_for_application(conn, application_id):
         (application_id,),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+# --- Users (CP16.2) ---
+
+
+def get_user(conn, user_id: str) -> dict | None:
+    """Get a user by id. Returns dict or None."""
+    row = conn.execute(
+        "SELECT * FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def create_user(conn, user_id: str, name: str, role: str = USER) -> int:
+    """Insert a new user. Returns the row id.
+
+    Raises sqlite3.IntegrityError if user_id already exists or
+    if role is invalid.
+    """
+    if role not in VALID_ROLES:
+        raise ValueError(f"Invalid role '{role}'. Must be one of: {sorted(VALID_ROLES)}")
+    if not name:
+        raise ValueError("User name is required")
+    cursor = conn.execute(
+        "INSERT INTO users (id, name, role) VALUES (?, ?, ?)",
+        (user_id, name, role),
+    )
+    conn.commit()
+    logger.info("Created user id=%s role=%s", user_id, role)
+    return cursor.lastrowid
+
+
+def update_user_role(conn, user_id: str, role: str) -> bool:
+    """Update a user's role. Returns True if found."""
+    if role not in VALID_ROLES:
+        raise ValueError(f"Invalid role '{role}'. Must be one of: {sorted(VALID_ROLES)}")
+    cursor = conn.execute(
+        "UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?",
+        (role, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_or_create_user(conn, user_id: str, name: str = "", role: str = USER) -> dict:
+    """Get existing user or create with defaults. Returns dict."""
+    user = get_user(conn, user_id)
+    if user:
+        return user
+    if not name:
+        name = os.environ.get("CAREERPILOT_USER_NAME", "Admin")
+    create_user(conn, user_id, name, role)
+    return get_user(conn, user_id)
+
+
+def require_admin(conn, user_id: str) -> bool:
+    """Return True if user exists and has ADMIN role.
+
+    Backend foundation for CP16 admin endpoints. Reusable —
+    no business logic here, just role lookup.
+    """
+    user = get_user(conn, user_id)
+    return user is not None and user["role"] == ADMIN
+
+
+# --- Job Sources (CP16.2) ---
+
+
+def get_job_sources(conn, active_only: bool = True) -> list[dict]:
+    """Get job sources, optionally filtered by active status."""
+    query = "SELECT * FROM job_sources"
+    if active_only:
+        query += " WHERE active = 1"
+    query += " ORDER BY name"
+    rows = conn.execute(query).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_job_source(conn, source_id: int) -> dict | None:
+    """Get a single job source by id. Returns dict or None."""
+    row = conn.execute(
+        "SELECT * FROM job_sources WHERE id = ?", (source_id,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def add_job_source(conn, name: str, source_type: str = "job_board",
+                     active: bool = True) -> int:
+    """Insert a new job source. Returns the row id."""
+    cursor = conn.execute(
+        "INSERT INTO job_sources (name, source_type, active) VALUES (?, ?, ?)",
+        (name, source_type, 1 if active else 0),
+    )
+    conn.commit()
+    logger.info("Added job source: %s (%s)", name, source_type)
+    return cursor.lastrowid
+
+
+def update_job_source(conn, source_id: int, **kwargs) -> bool:
+    """Update job source fields. Returns True if found."""
+    if not kwargs:
+        return False
+    allowed = {"name", "source_type", "active"}
+    fields = {k: v for k, v in kwargs.items() if k in allowed}
+    if not fields:
+        return False
+    set_clause = ", ".join(f"{k} = ?" for k in fields)
+    fields["updated_at"] = datetime.now().isoformat()
+    cursor = conn.execute(
+        f"UPDATE job_sources SET {set_clause}, updated_at = ? WHERE id = ?",
+        (*fields.values(), source_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def remove_job_source(conn, source_id: int) -> bool:
+    """Delete a job source by id. Returns True if found."""
+    cursor = conn.execute(
+        "DELETE FROM job_sources WHERE id = ?", (source_id,)
+    )
+    conn.commit()
+    return cursor.rowcount > 0

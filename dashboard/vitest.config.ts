@@ -12,6 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'react-dom/test-utils': path.resolve(__dirname, './src/test-utils-mock.ts'),
     },
   },
 })

@@ -1,8 +1,8 @@
 // dashboard/src/app/api/prep-pack/route.ts
 import { NextResponse } from 'next/server';
-import * as childProcess from 'node:child_process';
-import * as fsp from 'node:fs/promises';
-import path from 'node:path';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import * as childProcess from 'child_process';
+import * as fsp from 'fs/promises';
 import { z } from 'zod';
 import { buildJobStem } from '@/lib/prep-pack/naming';
 import type { PrepPackJobResponse } from '@/lib/prep-pack/types';
@@ -14,7 +14,7 @@ const VAULT_NOTE_DIR = 'F:\\Obsidian\\SecondBrain\\Learning\\Audiobooks';
 
 // Path to the wrapper script. process.cwd() is the dashboard/ dir when Next.js runs;
 // tools/ sits next to src/.
-const WRAPPER_SCRIPT = path.resolve(process.cwd(), 'tools', 'run-prep-pack.ps1');
+const WRAPPER_SCRIPT = `${process.cwd()}\\tools\\run-prep-pack.ps1`;
 
 // Absolute pwsh path. Node's spawn inherits the parent's PATH, but Next.js
 // dev servers can be started from environments where pwsh isn't on PATH.
@@ -100,6 +100,12 @@ function validateSourceHasContent(sourceText: string): { ok: true } | { ok: fals
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let parsed;
   try {
     const body = await request.json();
@@ -126,7 +132,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const stem = buildJobStem(intelligence.company, intelligence.jobTitle, new Date());
-  const inputPath = path.join(VAULT_INBOX, `${stem}.txt`);
+  const inputPath = `${VAULT_INBOX}\${stem}.txt`;
 
   try {
     await fsp.mkdir(VAULT_INBOX, { recursive: true });
@@ -197,12 +203,12 @@ export async function POST(request: Request): Promise<Response> {
   // child completion via Node's async I/O model.
 
   const expectedOutputs: PrepPackJobResponse['expectedOutputs'] = {
-    vaultNote: path.join(VAULT_NOTE_DIR, `${stem}.md`),
-    mp3: path.join(AUDIOBOOK_OUTPUT_DIR, `${stem}.mp3`),
+    vaultNote: `${VAULT_NOTE_DIR}\\${stem}.md`,
+    mp3: `${AUDIOBOOK_OUTPUT_DIR}\\${stem}.mp3`,
   };
   if (config.produceKindle) {
     const ext = config.kindleFormat.toLowerCase();
-    expectedOutputs.kindle = path.join(KINDLE_OUTPUT_DIR, `${stem}.${ext}`);
+    expectedOutputs.kindle = `${KINDLE_OUTPUT_DIR}\\${stem}.${ext}`;
   }
 
   return NextResponse.json(

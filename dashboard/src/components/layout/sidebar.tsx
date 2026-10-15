@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
 import { useSidebar } from "@/contexts/sidebar-context"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { LayoutDashboard, Search, Briefcase, BarChart3, ChevronRight, Mail, MessageSquare, Settings, Rocket, GraduationCap, Users } from "lucide-react"
+import { LayoutDashboard, Search, Briefcase, BarChart3, ChevronRight, Mail, MessageSquare, Settings, Rocket, GraduationCap, Users, ShieldCheck } from "lucide-react"
+import { useAdminApi } from "@/hooks/use-admin-api"
 
 const NAV_ITEMS = [
   { id: "overview", href: "/", label: "Overview", icon: LayoutDashboard },
@@ -21,6 +22,13 @@ const NAV_ITEMS = [
   { id: "training", href: "/training", label: "Training", icon: GraduationCap },
   { id: "settings", href: "/settings", label: "Settings", icon: Settings },
 ]
+
+const ADMIN_NAV_ITEM = {
+  id: "admin",
+  href: "/admin",
+  label: "Admin",
+  icon: ShieldCheck,
+}
 
 const ACTIVE_STATUSES = ["interested", "applied", "phone_screen", "interview"]
 
@@ -116,10 +124,11 @@ function useSearchResultsNewCount() {
 
 interface SidebarBodyProps {
   collapsed: boolean
+  isAdmin: boolean | null
   onNavigate?: () => void
 }
 
-function SidebarBody({ collapsed, onNavigate }: SidebarBodyProps) {
+function SidebarBody({ collapsed, isAdmin, onNavigate }: SidebarBodyProps) {
   const pathname = usePathname()
   const activeCount = useActiveAppCount()
   const approvedQueueCount = useApprovedQueueCount()
@@ -180,6 +189,20 @@ function SidebarBody({ collapsed, onNavigate }: SidebarBodyProps) {
             </Link>
           )
         })}
+        {isAdmin === true && (
+          <Link
+            href={ADMIN_NAV_ITEM.href}
+            onClick={onNavigate}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all min-h-[44px] ${
+              pathname === ADMIN_NAV_ITEM.href
+                ? "bg-zinc-800 text-amber-400 font-bold border-r-2 border-amber-400"
+                : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+            }`}
+          >
+            <ShieldCheck size={18} className="flex-shrink-0" />
+            {!collapsed && <span className="flex-1">{ADMIN_NAV_ITEM.label}</span>}
+          </Link>
+        )}
       </nav>
 
       <div className="p-4 border-t border-zinc-800">
@@ -203,14 +226,14 @@ function SidebarBody({ collapsed, onNavigate }: SidebarBodyProps) {
   )
 }
 
-function DesktopSidebar() {
+function DesktopSidebar({ isAdmin }: { isAdmin: boolean | null }) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
     <aside
       className={`${collapsed ? "w-16" : "w-56"} hidden md:flex flex-shrink-0 bg-zinc-900 text-white transition-all duration-300 flex-col`}
     >
-      <SidebarBody collapsed={collapsed} />
+      <SidebarBody collapsed={collapsed} isAdmin={isAdmin} />
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="p-3 border-t border-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors flex items-center justify-center min-h-[44px]"
@@ -225,7 +248,7 @@ function DesktopSidebar() {
   )
 }
 
-function MobileSidebarDrawer() {
+function MobileSidebarDrawer({ isAdmin }: { isAdmin: boolean | null }) {
   const { drawerOpen, setDrawerOpen } = useSidebar()
   const pathname = usePathname()
 
@@ -242,17 +265,23 @@ function MobileSidebarDrawer() {
         showCloseButton={false}
         className="w-56 max-w-[80vw] bg-zinc-900 text-white border-r border-zinc-800 ring-0 p-0"
       >
-        <SidebarBody collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+        <SidebarBody
+          collapsed={false}
+          isAdmin={isAdmin}
+          onNavigate={() => setDrawerOpen(false)}
+        />
       </SheetContent>
     </Sheet>
   )
 }
 
 export function Sidebar() {
+  const { isAdmin } = useAdminApi()
+
   return (
     <>
-      <DesktopSidebar />
-      <MobileSidebarDrawer />
+      <DesktopSidebar isAdmin={isAdmin} />
+      <MobileSidebarDrawer isAdmin={isAdmin} />
     </>
   )
 }

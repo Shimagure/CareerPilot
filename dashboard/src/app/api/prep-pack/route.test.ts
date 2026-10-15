@@ -1,29 +1,51 @@
+// @vitest-environment node
 // dashboard/src/app/api/prep-pack/route.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PrepPackJobRequest } from '@/lib/prep-pack/types';
+import { NextResponse } from 'next/server';
 
-const spawnMock = vi.fn();
-const writeFileMock = vi.fn();
-const mkdirMock = vi.fn();
+const { mockSpawn, mockWriteFile, mockMkdir } = vi.hoisted(() => ({
+  mockSpawn: vi.fn(),
+  mockWriteFile: vi.fn(),
+  mockMkdir: vi.fn(),
+}));
 
-vi.mock('node:child_process', () => ({
-  spawn: (...args: unknown[]) => {
-    spawnMock(...args);
+vi.mock('@/lib/supabase/server', () => ({
+  createServerSupabaseClient: vi.fn().mockReturnValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null }),
+    },
+  }),
+}));
+
+vi.mock('node:path', () => {
+  const actualPath = require('path');
+  return {
+    ...actualPath,
+    default: actualPath,
+    __esModule: true,
+  };
+});
+
+vi.mock('child_process', () => {
+  const spawnMock = vi.fn((...args: any[]) => {
+    mockSpawn(...args);
     return {
       unref: vi.fn(),
       on: vi.fn(),
       pid: 42,
     };
-  },
-}));
+  });
+  return {
+    spawn: spawnMock,
+    default: { spawn: spawnMock },
+  };
+});
 
-vi.mock('node:fs/promises', () => ({
-  default: {
-    writeFile: (...args: unknown[]) => writeFileMock(...args),
-    mkdir:     (...args: unknown[]) => mkdirMock(...args),
-  },
-  writeFile: (...args: unknown[]) => writeFileMock(...args),
-  mkdir:     (...args: unknown[]) => mkdirMock(...args),
+vi.mock('fs/promises', () => ({
+  writeFile: mockWriteFile,
+  mkdir: mockMkdir,
+  default: { writeFile: mockWriteFile, mkdir: mockMkdir },
 }));
 
 import { POST } from './route';
@@ -56,9 +78,9 @@ const minimalReq: PrepPackJobRequest = {
 };
 
 beforeEach(() => {
-  spawnMock.mockClear();
-  writeFileMock.mockClear();
-  mkdirMock.mockClear();
+  mockSpawn.mockClear();
+  mockWriteFile.mockClear();
+  mockMkdir.mockClear();
 });
 
 describe('POST /api/prep-pack', () => {
@@ -70,6 +92,9 @@ describe('POST /api/prep-pack', () => {
     });
 
     const res = await POST(req);
+    if (res.status !== 202) {
+      console.log(await res.json());
+    }
     expect(res.status).toBe(202);
 
     const body = await res.json();
@@ -88,8 +113,8 @@ describe('POST /api/prep-pack', () => {
       body: JSON.stringify(minimalReq),
     });
     await POST(req);
-    expect(writeFileMock).toHaveBeenCalledTimes(1);
-    const [path, content] = writeFileMock.mock.calls[0];
+    expect(mockWriteFile).toHaveBeenCalledTimes(1);
+    const [path, content] = mockWriteFile.mock.calls[0];
     expect(path).toMatch(/Inbox.*\.txt$/);
     // Schema applies .trim() on parse; assert against the trimmed value.
     expect(content).toBe(minimalReq.sourceText.trim());
@@ -103,8 +128,8 @@ describe('POST /api/prep-pack', () => {
     });
     await POST(req);
 
-    expect(spawnMock).toHaveBeenCalledTimes(1);
-    const [cmd, args, opts] = spawnMock.mock.calls[0];
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+    const [cmd, args, opts] = mockSpawn.mock.calls[0];
     // cmd is the resolved pwsh path (absolute, or 'pwsh' fallback via PWSH_BIN env)
     expect(cmd).toMatch(/pwsh(\.exe)?$/i);
     expect(args).toContain('-NoProfile');
@@ -134,7 +159,7 @@ describe('POST /api/prep-pack', () => {
       body: JSON.stringify(r),
     });
     await POST(req);
-    const [, args] = spawnMock.mock.calls[0];
+    const [, args] = mockSpawn.mock.calls[0];
     expect(args).not.toContain('-ProduceKindle');
     expect(args).not.toContain('-KindleFormat');
   });
@@ -150,7 +175,7 @@ describe('POST /api/prep-pack', () => {
       body: JSON.stringify(r),
     });
     await POST(req);
-    const [, args] = spawnMock.mock.calls[0];
+    const [, args] = mockSpawn.mock.calls[0];
     const modeIdx = args.indexOf('-Mode');
     expect(modeIdx).toBeGreaterThan(-1);
     expect(args[modeIdx + 1]).toBe('Series');
@@ -165,7 +190,7 @@ describe('POST /api/prep-pack', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
-    expect(spawnMock).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when sourceText is empty', async () => {
@@ -177,7 +202,7 @@ describe('POST /api/prep-pack', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
-    expect(spawnMock).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when config.voice is invalid', async () => {
@@ -189,7 +214,7 @@ describe('POST /api/prep-pack', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
-    expect(spawnMock).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when sourceText has only an instruction block (no ## headings)', async () => {
@@ -209,7 +234,7 @@ describe('POST /api/prep-pack', () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.reason).toMatch(/no `## ` section headings/i);
-    expect(spawnMock).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when sourceText is too short after instruction-block stripping', async () => {
@@ -226,6 +251,28 @@ describe('POST /api/prep-pack', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
-    expect(spawnMock).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when user is unauthenticated', async () => {
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server');
+    vi.mocked(createServerSupabaseClient).mockResolvedValueOnce({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: new Error('Not authenticated') }),
+      },
+    } as never);
+
+    const req = new Request('http://localhost/api/prep-pack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(minimalReq),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toBe('Unauthorized');
+    expect(mockWriteFile).not.toHaveBeenCalled();
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 });
